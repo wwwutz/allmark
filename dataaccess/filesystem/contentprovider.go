@@ -5,13 +5,12 @@
 package filesystem
 
 import (
+	"fmt"
 	"github.com/andreaskoch/allmark/common/content"
 	"github.com/andreaskoch/allmark/common/route"
 	"github.com/andreaskoch/allmark/common/util/fsutil"
 	"github.com/andreaskoch/allmark/common/util/hashutil"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -197,7 +196,18 @@ func getMimeType(path string) (string, error) {
 	contentType := mime.TypeByExtension(fileExtension)
 	if contentType == "" {
 		// fallback: derive content type from data
-		data, err := getData(path)
+		data := make([]byte, 512)
+
+		//		data, err := getData(path)
+
+		file, err := os.Open(path)
+		if err != nil {
+			return "", err
+		}
+
+		defer file.Close()
+		_, err = file.Read(data)
+
 		if err != nil {
 			return "", err
 		}
@@ -206,15 +216,4 @@ func getMimeType(path string) (string, error) {
 	}
 
 	return contentType, nil
-}
-
-func getData(path string) ([]byte, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	defer file.Close()
-
-	return ioutil.ReadAll(file)
 }
